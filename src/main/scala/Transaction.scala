@@ -41,8 +41,6 @@ class TransactionQueue {
 }
 
 class Transaction(
-  val transactionsQueue:      TransactionQueue,
-  val processedTransactions:  TransactionQueue,
   val from:                   Account,
   val to:                     Account,
   val amount:                 Double,
@@ -85,25 +83,13 @@ class Transaction(
 
     // TODO - project task 3
     // make the code below thread safe
-    if (status == TransactionStatus.PENDING) {
-      // Acquire permission to access both the involved bank
-      // a
-      if (from.uid < to.uid) {
-        from.synchronized {
-          to.synchronized {
-            doTransaction
-          }
-        }
-      } else {
-        to.synchronized {
-          from.synchronized {
-            doTransaction
-          }
-        }
-      }
-
-      Thread.sleep(50) // you might want this to make more room for
-                        // new transactions to be added to the queue
+    if (from.uid < to.uid) {
+      from.synchronized { to.synchronized { doTransaction } }
+    } else {
+      to.synchronized { from.synchronized { doTransaction } }
     }
+
+    Thread.sleep(10) // you might want this to make more room for
+                      // new transactions to be added to the queue
   }
 }

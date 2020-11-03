@@ -7,9 +7,9 @@ class Bank(val allowedAttempts: Integer = 3) {
     from:   Account,
     to:     Account,
     amount: Double
-  ): Unit = tq.synchronized {
+  ): Unit = {
     // Add a new transaction to the queue.
-    tq.push(new Transaction(tq, pq, from, to, amount, allowedAttempts))
+    tq.push(new Transaction(from, to, amount, allowedAttempts))
 
     // Start processing transactions concurrently.
     // Each thread always completes exactly one transaction, i. e.
