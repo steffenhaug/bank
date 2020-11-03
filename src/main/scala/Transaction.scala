@@ -62,27 +62,34 @@ class Transaction(
     def doTransaction() = {
       attempt += 1
 
-      // 
+      // Attempts to perform the transaction.
       from.withdraw(amount) match {
         case Right(_) => {
           // Could not withdraw money.
+          // In this case, nothing is changed, so we just
+          // fail if necessary, and return.
           if (attempt >= allowedAttemps) {
-            // Fail if this was the last attempt.
             status = TransactionStatus.FAILED
           }
         }
         case Left(_) => {
           // We could get money, so deposit it.
           // This can only fail if amount < 0 in which case
-          // we alcready failed the withdrawal.
+          // we alcready failed the withdrawal. This means
+          // that we COULD release the mutex on the `from`-
+          // account before waiting here IN THIS SPECIFIC
+          // EXAMPLE. If it was the case that depositing
+          // could fail, we would actually need to use the
+          // mutex to put the money back again!
           to.deposit(amount)
           status = TransactionStatus.SUCCESS
         }
       }
     }
 
-    // TODO - project task 3
-    // make the code below thread safe
+    // Start the transactions, locking in the order imposed
+    // by the AccountID ordering, c. f. concurrent pr. book
+    // on page 46-47.
     if (from.uid < to.uid) {
       from.synchronized { to.synchronized { doTransaction } }
     } else {
@@ -90,6 +97,6 @@ class Transaction(
     }
 
     Thread.sleep(10) // you might want this to make more room for
-                      // new transactions to be added to the queue
+                     // new transactions to be added to the queue
   }
 }
